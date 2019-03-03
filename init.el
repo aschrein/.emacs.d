@@ -89,4 +89,4 @@
 	   )
    )
   )
-(global-set-key (kbd "s-e") 'call-something-on-current-buffers-file)
+(global-set-key (kbd "s-e") 'exec-current-file)
