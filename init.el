@@ -4,9 +4,10 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(minimap-mode nil)
  '(package-selected-packages
    (quote
-    (## buffer-move atom-one-dark-theme atom-dark-theme exwm))))
+    (neotree dap-mode nyan-mode helm minimap ivy lsp-ui company-lsp use-package cquery lsp-mode ## buffer-move atom-one-dark-theme atom-dark-theme exwm))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -16,13 +17,49 @@
 (add-to-list 'package-archives '("melpa-stable" . "https://stable.melpa.org/packages/") t)
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 (package-initialize)
+(add-to-list 'package-archives '("melpa" . "http://melpa.milkbox.net/packages/") t)
+
+
+;; A list of packages installed on my machine
+;; Updating it is a manual process 
+(setq package-reqs '(neotree dap-mode tree-mode bui nyan-mode helm popup helm-core async minimap ivy atom-dark-theme atom-one-dark-theme buffer-move company-lsp company cquery exwm lsp-ui lsp-mode ht f dash-functional dash markdown-mode s spinner use-package bind-key xelb))
+(unless package-archive-contents (package-refresh-contents))
+(dolist (package package-reqs)
+  (unless (package-installed-p package)
+	  (package-install package))
+  )
+;;
+;;
+
 (require 'exwm)
 (require 'exwm-config)
 (require 'buffer-move)
 (exwm-config-default)
 ;(require 'atom-one-dark-theme)
 (load-theme 'atom-one-dark t)
+(use-package lsp-mode)
+(use-package lsp-ui
+  :init (add-hook 'lsp-mode-hook 'lsp-ui-mode)
+  )
+(use-package company-lsp
+  :ensure t
+  :config
+  (push 'company-lsp company-backends))
+(setq cquery-executable "/home/aschrein/dev/cquery/build/release/bin/cquery")
+(with-eval-after-load 'projectile
+  (setq projectile-project-root-files-top-down-recurring
+        (append '("compile_commands.json"
+                  ".cquery")
+                projectile-project-root-files-top-down-recurring)))
+(defun cquery//enable ()
+  (condition-case nil
+      (lsp)
+    (user-error nil)))
 
+(use-package cquery
+	     :commands lsp
+	     :init (add-hook 'c-mode-hook #'cquery//enable)
+             (add-hook 'c++-mode-hook #'cquery//enable))
 
 ;(add-hook 'exwm-manage-finish-hook
 ;  (lambda () (call-interactively #'exwm-input-release-keyboard)
@@ -71,12 +108,14 @@
 
 
 (show-paren-mode 1)
-
+(ido-mode 1)
+(setq ido-separator "\n")
 (exwm-input-set-key (kbd "s-<right>") #'buf-move-right)
 (exwm-input-set-key (kbd "s-<left>") #'buf-move-left)
 (exwm-input-set-key (kbd "s-<up>") #'buf-move-up)
 (exwm-input-set-key (kbd "s-<down>") #'buf-move-down)
-;(split-window-below)
+(exwm-input-set-key (kbd "s-b") #'helm-buffers-list)
+					;(split-window-below)
 ;(split-window-right)
 ;(global-set-key (kbd "H-o") #'other-window)
 (defun exec-current-file ()
