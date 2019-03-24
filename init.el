@@ -4,10 +4,13 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(dap-mode t nil (dap-mode))
+ '(dap-ui-mode t nil (dap-ui))
  '(minimap-mode nil)
+ '(nyan-mode t)
  '(package-selected-packages
    (quote
-    (neotree dap-mode nyan-mode helm minimap ivy lsp-ui company-lsp use-package cquery lsp-mode ## buffer-move atom-one-dark-theme atom-dark-theme exwm))))
+    (bison-mode fancy-battery treemacs lsp-java hydra clang-format neotree dap-mode nyan-mode helm minimap ivy lsp-ui company-lsp use-package cquery lsp-mode ## buffer-move atom-one-dark-theme atom-dark-theme exwm))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -129,3 +132,61 @@
    )
   )
 (global-set-key (kbd "s-e") 'exec-current-file)
+
+
+(defun clang-format-current-file ()
+  (interactive)
+  (save-buffer)
+  (shell-command 
+   (format "~/dev/llvm/build/install/bin/clang-format -i %s" 
+	   (shell-quote-argument (buffer-file-name))
+	   )
+   )
+  )
+(define-key global-map (kbd "M-f") 'clang-format-current-file)
+;; Auto-reload buffers
+(global-auto-revert-mode t)
+
+
+(defun neotree-project-dir-toggle ()
+  "Open NeoTree using the project root, using find-file-in-project,
+or the current buffer directory."
+  (interactive)
+  (let ((project-dir
+         (ignore-errors
+           ;;; Pick one: projectile or find-file-in-project
+           ; (projectile-project-root)
+           (ffip-project-root)
+           ))
+        (file-name (buffer-file-name))
+        (neo-smart-open t))
+    (if (and (fboundp 'neo-global--window-exists-p)
+             (neo-global--window-exists-p))
+        (neotree-hide)
+      (progn
+        (neotree-show)
+        (if project-dir
+            (neotree-dir project-dir))
+        (if file-name
+            (neotree-find file-name))))))
+
+(define-key global-map (kbd "M-t") 'neotree-project-dir-toggle)
+
+(define-key lsp-ui-mode-map [remap xref-find-definitions] #'lsp-ui-peek-find-definitions)
+(define-key lsp-ui-mode-map [remap xref-find-references] #'lsp-ui-peek-find-references)
+
+
+(require 'dap-lldb)
+
+(dap-register-debug-provider
+ "C++"
+ (lambda (conf)
+   (plist-put conf :debugPort 1090)
+   (plist-put conf :host "localhost")
+   conf))
+
+(dap-register-debug-template "DAP C++ Configuration"
+                             (list :type "lldb"
+                                   :request "launch"
+                                   :args ""
+                                   :name "Run Configuration"))
