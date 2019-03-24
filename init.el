@@ -4,9 +4,7 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(dap-mode t nil (dap-mode))
- '(dap-ui-mode t nil (dap-ui))
- '(minimap-mode nil)
+ ;;'(minimap-mode nil)
  '(nyan-mode t)
  '(package-selected-packages
    (quote
@@ -176,17 +174,29 @@ or the current buffer directory."
 (define-key lsp-ui-mode-map [remap xref-find-references] #'lsp-ui-peek-find-references)
 
 
-(require 'dap-lldb)
+(defun duplicate-line()
+  (interactive)
+  (move-beginning-of-line 1)
+  (kill-line)
+  (yank)
+  (open-line 1)
+  (next-line 1)
+  (yank)
+  )
 
-(dap-register-debug-provider
- "C++"
- (lambda (conf)
-   (plist-put conf :debugPort 1090)
-   (plist-put conf :host "localhost")
-   conf))
 
-(dap-register-debug-template "DAP C++ Configuration"
-                             (list :type "lldb"
-                                   :request "launch"
-                                   :args ""
-                                   :name "Run Configuration"))
+(define-minor-mode my-mode
+  "A minor mode so that my key settings override annoying major modes."
+  :init-value t
+  :lighter "my-mode"
+  :keymap (let ((map (make-sparse-keymap)))
+            (define-key map (kbd "C-d") 'duplicate-line)
+            map))
+
+(define-globalized-minor-mode global-my-mode my-mode my-mode)
+(add-hook 'text-mode-hook 'my-mode)
+
+;(add-to-list 'emulation-mode-map-alists `((my-mode . ,my-mode-map)))
+	     
+;(global-set-key (kbd "C-d") 'duplicate-line)
+;(define-key global-map (kbd "C-d") 'duplicate-line)
